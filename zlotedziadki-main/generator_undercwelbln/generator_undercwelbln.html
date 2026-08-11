@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator undercwel_bln</title>
+    <style>
+        /* Styl ogólny - ciemne tło */
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* Główny kontener */
+        .container {
+            background-color: #222222;
+            padding: 20px;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* Etykiety tekstowe */
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        /* Wspólne style dla pól i przycisków */
+        .input-box, .btn {
+            background-color: #1a1a1a;
+            border: 1px solid #ff1a1a;
+            color: #ffffff;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 3px;
+            margin-bottom: 15px;
+        }
+
+        .input-box {
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        textarea.input-box {
+            height: 80px;
+            resize: vertical;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #333333;
+        }
+
+        /* Aktywny czerwony przycisk ustawień */
+        .btn.active-red {
+            background-color: #ff1a1a;
+            color: white;
+        }
+        .btn.active-red:hover {
+            background-color: #e60000;
+        }
+
+        /* Ukryty panel ustawień czcionki */
+        #settingsPanel {
+            display: none;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 3px;
+            margin-bottom: 15px;
+            border: 1px solid #333;
+        }
+
+        /* Siatka dla rozmiarów 3 linii */
+        .size-inputs-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .size-inputs-row .input-box {
+            margin-bottom: 0;
+            text-align: center;
+        }
+
+        /* Pasek wyboru koloru */
+        input[type="color"] {
+            padding: 2px 5px;
+            height: 35px;
+            cursor: pointer;
+        }
+
+        /* Kontener na podgląd wygenerowanego obrazka */
+        .preview-container {
+            position: relative;
+            width: 100%;
+            background-color: #000;
+            margin-bottom: 15px;
+            border-radius: 3px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+        }
+
+        #preview-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Czarny cień */
+        .gradient-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            background: linear-gradient(to top, #000000 0%, #000000 45%, rgba(0,0,0,0) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 20px;
+            pointer-events: none;
+        }
+
+        /* Główny duży tekst - usunięto globalny rozmiar, bo teraz jest nadawany dynamicznie liniom */
+        .main-text {
+            font-family: 'Arial Black', Impact, sans-serif;
+            font-weight: 900;
+            color: white;
+            text-align: center;
+            margin-bottom: 5px;
+            word-break: break-word;
+            padding: 0 20px;
+        }
+        
+        .main-text div {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Znak wodny / dolny tekst */
+        .watermark {
+            font-family: 'Arial Black', Impact, sans-serif;
+            font-size: 16px;
+            font-weight: 900;
+            color: #9b51e0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="file"] {
+            color: white;
+        }
+        input[type="file"]::file-selector-button {
+            background-color: #e0e0e0;
+            border: none;
+            padding: 3px 8px;
+            font-weight: bold;
+            margin-right: 10px;
+            cursor: pointer;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <label>Wybierz obraz:</label>
+        <input type="file" id="imageInput" class="input-box" accept="image/*">
+
+        <label>Tekst:</label>
+        <textarea id="textInput" class="input-box" placeholder="Wpisz tekst tutaj..."></textarea>
+
+        <!-- Przycisk toggle dla ustawień -->
+        <button class="btn" id="toggleSettingsBtn">Ustawienia czcionki</button>
+
+        <!-- Rozwijany panel ustawień -->
+        <div id="settingsPanel">
+            <label>Rozmiar czcionki dla linii (opcjonalne):</label>
+            <div class="size-inputs-row">
+                <input type="number" id="fs1" class="input-box" placeholder="17" min="1">
+                <input type="number" id="fs2" class="input-box" placeholder="17" min="1">
+                <input type="number" id="fs3" class="input-box" placeholder="17" min="1">
+            </div>
+
+            <label>Kolor czcionki:</label>
+            <input type="color" id="fontColor" class="input-box" value="#ffffff">
+
+            <button class="btn" id="resetBtn" style="margin-bottom: 0;">Reset</button>
+        </div>
+
+        <div class="preview-container" id="captureArea">
+            <img id="preview-image" src="https://via.placeholder.com/500x500/333333/555555?text=Brak+obrazu" alt="Podgląd">
+            
+            <div class="gradient-overlay">
+                <!-- Podgląd tekstu -->
+                <div class="main-text" id="previewText"></div>
+                <div class="watermark">undercwel_bln</div>
+            </div>
+        </div>
+
+        <button class="btn" onclick="downloadImage()">Pobierz</button>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const textInput = document.getElementById('textInput');
+        const previewImage = document.getElementById('preview-image');
+        const previewText = document.getElementById('previewText');
+        
+        // Elementy panelu ustawień
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const fs1 = document.getElementById('fs1');
+        const fs2 = document.getElementById('fs2');
+        const fs3 = document.getElementById('fs3');
+        const fontColor = document.getElementById('fontColor');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Obsługa rozwijania panelu ustawień
+        toggleSettingsBtn.addEventListener('click', () => {
+            if (settingsPanel.style.display === 'block') {
+                settingsPanel.style.display = 'none';
+                toggleSettingsBtn.classList.remove('active-red');
+            } else {
+                settingsPanel.style.display = 'block';
+                toggleSettingsBtn.classList.add('active-red');
+            }
+        });
+
+        // Resetowanie ustawień panelu
+        resetBtn.addEventListener('click', () => {
+            fs1.value = '';
+            fs2.value = '';
+            fs3.value = '';
+            fontColor.value = '#ffffff';
+            updatePreview();
+        });
+
+        // Funkcja aktualizująca tekst i style na żywo w podglądzie HTML
+        function updatePreview() {
+            const text = textInput.value;
+            const paragraphs = text.split('\n');
+            
+            // Pobieranie wartości z inputów lub domyślnych (48)
+            const customSizes = [fs1.value, fs2.value, fs3.value];
+            
+            // Zmiana koloru całego bloku tekstu
+            previewText.style.color = fontColor.value;
+            previewText.innerHTML = ''; // Czyszczenie
+            
+            // Tworzenie osobnych divów dla każdej linijki (aby nadać różne rozmiary)
+            paragraphs.forEach((p, index) => {
+                let div = document.createElement('div');
+                div.innerText = p === '' ? '\u200B' : p; // pusta linia, żeby nie psuć wysokości
+                
+                let size = 48; // domyślny rozmiar
+                if (index < 3 && customSizes[index]) {
+                    size = parseInt(customSizes[index]);
+                }
+                
+                div.style.fontSize = size + 'px';
+                div.style.lineHeight = '1.1';
+                previewText.appendChild(div);
+            });
+        }
+
+        // Nasłuchiwanie zmian, żeby podgląd aktualizował się na żywo
+        textInput.addEventListener('input', updatePreview);
+        fs1.addEventListener('input', updatePreview);
+        fs2.addEventListener('input', updatePreview);
+        fs3.addEventListener('input', updatePreview);
+        fontColor.addEventListener('input', updatePreview);
+
+        // Wstępne wywołanie żeby ustawić pierwszy tekst
+        updatePreview();
+
+        // Wgrywanie obrazka
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Funkcja pomocnicza: Zawijanie pojedynczej linijki (akapitu)
+        function wrapText(ctx, text, maxWidth) {
+            let words = text.split(' ');
+            let lines = [];
+            let currentLine = words[0] || "";
+
+            for (let i = 1; i < words.length; i++) {
+                let word = words[i];
+                let width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        function downloadImage() {
+            if (previewImage.src.includes('placeholder')) {
+                alert("Najpierw wybierz obraz!");
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = previewImage.naturalWidth;
+            canvas.height = previewImage.naturalHeight;
+
+            // Rysowanie obrazu tła
+            ctx.drawImage(previewImage, 0, 0, canvas.width, canvas.height);
+
+            // Rysowanie czarnego cienia na dole
+            const gradientHeight = canvas.height * 0.65;
+            const gradientY = canvas.height - gradientHeight;
+            
+            const gradient = ctx.createLinearGradient(0, gradientY, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(0.55, 'rgba(0,0,0,1)');
+            gradient.addColorStop(1, 'rgba(0,0,0,1)');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, gradientY, canvas.width, gradientHeight);
+
+            // Pobieranie wpisanych tekstów i opcji
+            const scaleFactor = canvas.width / 500; 
+            const rawParagraphs = textInput.value.split('\n');
+            const customSizes = [fs1.value, fs2.value, fs3.value];
+            
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            
+            let canvasLines = [];
+            let totalTextHeight = 0;
+
+            // Obliczanie łamania wierszy i wysokości DLA KAŻDEJ wpisanej linijki osobno
+            for (let i = 0; i < rawParagraphs.length; i++) {
+                let baseSize = 48; // domyślny rozmiar to 48
+                if (i < 3 && customSizes[i]) {
+                    baseSize = parseInt(customSizes[i]);
+                }
+                
+                let scaledSize = Math.floor(baseSize * scaleFactor);
+                ctx.font = `900 ${scaledSize}px 'Arial Black', Impact, sans-serif`;
+                
+                let wrapped = wrapText(ctx, rawParagraphs[i], canvas.width * 0.9);
+                
+                for (let j = 0; j < wrapped.length; j++) {
+                    let lineHeight = scaledSize * 1.1;
+                    canvasLines.push({
+                        text: wrapped[j],
+                        size: scaledSize,
+                        lineHeight: lineHeight
+                    });
+                    totalTextHeight += lineHeight;
+                }
+            }
+
+            // Ustalenie miejsca od którego zaczynamy rysować tekst od góry w dół
+            const bottomPadding = 45 * scaleFactor;
+            let currentY = canvas.height - bottomPadding - totalTextHeight;
+
+            // Ustawienie wybranego koloru
+            ctx.fillStyle = fontColor.value;
+
+            // Rysowanie wszystkich obliczonych i połamanych linijek
+            for (let i = 0; i < canvasLines.length; i++) {
+                ctx.font = `900 ${canvasLines[i].size}px 'Arial Black', Impact, sans-serif`;
+                ctx.fillText(canvasLines[i].text, canvas.width / 2, currentY);
+                currentY += canvasLines[i].lineHeight;
+            }
+
+            // Rysowanie znaku wodnego (UNDERWAY_PL)
+            ctx.textBaseline = 'bottom';
+            const watermarkFontSize = Math.floor(16 * scaleFactor);
+            ctx.font = `900 ${watermarkFontSize}px 'Arial Black', Impact, sans-serif`;
+            ctx.fillStyle = '#9b51e0';
+            ctx.fillText("UNDERWAY_PL", canvas.width / 2, canvas.height - (15 * scaleFactor));
+
+            // Pobieranie pliku na dysk
+            const link = document.createElement('a');
+            link.download = 'underway_generator.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.click();
+        }
+    </script>
+</body>
+</html>
