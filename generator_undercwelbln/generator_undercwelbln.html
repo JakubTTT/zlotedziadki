@@ -127,13 +127,26 @@
             display: block;
         }
 
+        /* NOWE: Ukryty obraz dla kopiowania (niewidoczny dla oka, ale przeglądarka go widzi przy kopiowaniu) */
+        #copyable-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Dopasowuje do wymiarów kontenera */
+            opacity: 0; /* Całkowicie przezroczysty dla oka */
+            pointer-events: auto; /* Reaguje na kliknięcia (prawy przycisk) */
+            z-index: 10; /* Zawsze na górze podglądu */
+        }
+
         /* Czarny cień */
         .gradient-overlay {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 45%;
+            height: 65%;
             background: linear-gradient(to top, #000000 0%, #000000 45%, rgba(0,0,0,0) 100%);
             display: flex;
             flex-direction: column;
@@ -141,9 +154,10 @@
             align-items: center;
             padding-bottom: 20px;
             pointer-events: none;
+            z-index: 5; /* Poniżej ukrytego obrazu dla kopiowania */
         }
 
-        /* Główny duży tekst - usunięto globalny rozmiar, bo teraz jest nadawany dynamicznie liniom */
+        /* Główny duży tekst */
         .main-text {
             font-family: 'Arial Black', Impact, sans-serif;
             font-weight: 900;
@@ -213,6 +227,9 @@
         <div class="preview-container" id="captureArea">
             <img id="preview-image" src="https://via.placeholder.com/500x500/333333/555555?text=Brak+obrazu" alt="Podgląd">
             
+            <!-- NOWE: To jest ten scalony obraz, który kopiujesz (nie widać go, ale jest nad podglądem) -->
+            <img id="copyable-image" alt="Kliknij prawym przyciskiem, aby skopiować" title="Kliknij prawym przyciskiem, aby skopiować">
+            
             <div class="gradient-overlay">
                 <!-- Podgląd tekstu -->
                 <div class="main-text" id="previewText"></div>
@@ -238,6 +255,9 @@
         const fontColor = document.getElementById('fontColor');
         const resetBtn = document.getElementById('resetBtn');
 
+        // NOWE: Element dla scalonego obrazu
+        const copyableImage = document.getElementById('copyable-image');
+
         // Obsługa rozwijania panelu ustawień
         toggleSettingsBtn.addEventListener('click', () => {
             if (settingsPanel.style.display === 'block') {
@@ -256,56 +276,6 @@
             fs3.value = '';
             fontColor.value = '#ffffff';
             updatePreview();
-        });
-
-        // Funkcja aktualizująca tekst i style na żywo w podglądzie HTML
-        function updatePreview() {
-            const text = textInput.value;
-            const paragraphs = text.split('\n');
-            
-            // Pobieranie wartości z inputów lub domyślnych (48)
-            const customSizes = [fs1.value, fs2.value, fs3.value];
-            
-            // Zmiana koloru całego bloku tekstu
-            previewText.style.color = fontColor.value;
-            previewText.innerHTML = ''; // Czyszczenie
-            
-            // Tworzenie osobnych divów dla każdej linijki (aby nadać różne rozmiary)
-            paragraphs.forEach((p, index) => {
-                let div = document.createElement('div');
-                div.innerText = p === '' ? '\u200B' : p; // pusta linia, żeby nie psuć wysokości
-                
-                let size = 48; // domyślny rozmiar
-                if (index < 3 && customSizes[index]) {
-                    size = parseInt(customSizes[index]);
-                }
-                
-                div.style.fontSize = size + 'px';
-                div.style.lineHeight = '1.1';
-                previewText.appendChild(div);
-            });
-        }
-
-        // Nasłuchiwanie zmian, żeby podgląd aktualizował się na żywo
-        textInput.addEventListener('input', updatePreview);
-        fs1.addEventListener('input', updatePreview);
-        fs2.addEventListener('input', updatePreview);
-        fs3.addEventListener('input', updatePreview);
-        fontColor.addEventListener('input', updatePreview);
-
-        // Wstępne wywołanie żeby ustawić pierwszy tekst
-        updatePreview();
-
-        // Wgrywanie obrazka
-        imageInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImage.src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
         });
 
         // Funkcja pomocnicza: Zawijanie pojedynczej linijki (akapitu)
@@ -328,9 +298,37 @@
             return lines;
         }
 
-        function downloadImage() {
+        // Funkcja aktualizująca tekst i style na żywo w podglądzie HTML
+        function updatePreview() {
+            const text = textInput.value;
+            const paragraphs = text.split('\n');
+            const customSizes = [fs1.value, fs2.value, fs3.value];
+            
+            previewText.style.color = fontColor.value;
+            previewText.innerHTML = '';
+            
+            paragraphs.forEach((p, index) => {
+                let div = document.createElement('div');
+                div.innerText = p === '' ? '\u200B' : p;
+                
+                let size = 48;
+                if (index < 3 && customSizes[index]) {
+                    size = parseInt(customSizes[index]);
+                }
+                
+                div.style.fontSize = size + 'px';
+                div.style.lineHeight = '1.1';
+                previewText.appendChild(div);
+            });
+
+            // NOWE: Po aktualizacji podglądu, generujemy scalony obraz dla kopiowania
+            generateFinalImage();
+        }
+
+        // NOWE: Funkcja generująca scalony obraz na podstawie aktualnych danych i ustawiająca go jako źródło ukrytego obrazu
+        function generateFinalImage() {
             if (previewImage.src.includes('placeholder')) {
-                alert("Najpierw wybierz obraz!");
+                copyableImage.src = ''; // Wyczyść jeśli nie ma zdjęcia
                 return;
             }
 
@@ -340,22 +338,20 @@
             canvas.width = previewImage.naturalWidth;
             canvas.height = previewImage.naturalHeight;
 
-            // Rysowanie obrazu tła
+            // 1. Zdjęcie tła
             ctx.drawImage(previewImage, 0, 0, canvas.width, canvas.height);
 
-            // Rysowanie czarnego cienia na dole
+            // 2. Gradient
             const gradientHeight = canvas.height * 0.65;
             const gradientY = canvas.height - gradientHeight;
-            
             const gradient = ctx.createLinearGradient(0, gradientY, 0, canvas.height);
             gradient.addColorStop(0, 'rgba(0,0,0,0)');
             gradient.addColorStop(0.55, 'rgba(0,0,0,1)');
             gradient.addColorStop(1, 'rgba(0,0,0,1)');
-            
             ctx.fillStyle = gradient;
             ctx.fillRect(0, gradientY, canvas.width, gradientHeight);
 
-            // Pobieranie wpisanych tekstów i opcji
+            // 3. Teksty
             const scaleFactor = canvas.width / 500; 
             const rawParagraphs = textInput.value.split('\n');
             const customSizes = [fs1.value, fs2.value, fs3.value];
@@ -366,54 +362,75 @@
             let canvasLines = [];
             let totalTextHeight = 0;
 
-            // Obliczanie łamania wierszy i wysokości DLA KAŻDEJ wpisanej linijki osobno
             for (let i = 0; i < rawParagraphs.length; i++) {
-                let baseSize = 48; // domyślny rozmiar to 48
-                if (i < 3 && customSizes[i]) {
-                    baseSize = parseInt(customSizes[i]);
-                }
-                
+                let baseSize = 48;
+                if (i < 3 && customSizes[i]) baseSize = parseInt(customSizes[i]);
                 let scaledSize = Math.floor(baseSize * scaleFactor);
                 ctx.font = `900 ${scaledSize}px 'Arial Black', Impact, sans-serif`;
-                
                 let wrapped = wrapText(ctx, rawParagraphs[i], canvas.width * 0.9);
                 
                 for (let j = 0; j < wrapped.length; j++) {
                     let lineHeight = scaledSize * 1.1;
-                    canvasLines.push({
-                        text: wrapped[j],
-                        size: scaledSize,
-                        lineHeight: lineHeight
-                    });
+                    canvasLines.push({ text: wrapped[j], size: scaledSize, lineHeight: lineHeight });
                     totalTextHeight += lineHeight;
                 }
             }
 
-            // Ustalenie miejsca od którego zaczynamy rysować tekst od góry w dół
             const bottomPadding = 45 * scaleFactor;
             let currentY = canvas.height - bottomPadding - totalTextHeight;
-
-            // Ustawienie wybranego koloru
             ctx.fillStyle = fontColor.value;
 
-            // Rysowanie wszystkich obliczonych i połamanych linijek
             for (let i = 0; i < canvasLines.length; i++) {
                 ctx.font = `900 ${canvasLines[i].size}px 'Arial Black', Impact, sans-serif`;
                 ctx.fillText(canvasLines[i].text, canvas.width / 2, currentY);
                 currentY += canvasLines[i].lineHeight;
             }
 
-            // Rysowanie znaku wodnego (UNDERWAY_PL)
+            // 4. Znak wodny
             ctx.textBaseline = 'bottom';
             const watermarkFontSize = Math.floor(16 * scaleFactor);
             ctx.font = `900 ${watermarkFontSize}px 'Arial Black', Impact, sans-serif`;
             ctx.fillStyle = '#9b51e0';
-            ctx.fillText("UNDERWAY_PL", canvas.width / 2, canvas.height - (15 * scaleFactor));
+            ctx.fillText("undercwel_bln", canvas.width / 2, canvas.height - (15 * scaleFactor));
 
-            // Pobieranie pliku na dysk
+            // Zapisz wygenerowany obraz do tagu img dla kopiowania
+            copyableImage.src = canvas.toDataURL('image/jpeg', 0.9);
+        }
+
+        // Nasłuchiwanie zmian, żeby podgląd i obraz dla kopiowania aktualizowały się na żywo
+        textInput.addEventListener('input', updatePreview);
+        fs1.addEventListener('input', updatePreview);
+        fs2.addEventListener('input', updatePreview);
+        fs3.addEventListener('input', updatePreview);
+        fontColor.addEventListener('input', updatePreview);
+
+        // Wstępne wywołanie żeby ustawić pierwszy tekst
+        updatePreview();
+
+        // Wgrywanie obrazka
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    // Po wgraniu zdjęcia musimy wygenerować scalony obraz
+                    generateFinalImage();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Przycisk pobierania korzysta z tej samej logiki co kopiowanie
+        function downloadImage() {
+            if (copyableImage.src === '') {
+                alert("Najpierw wybierz obraz i wpisz tekst!");
+                return;
+            }
+
             const link = document.createElement('a');
-            link.download = 'underway_generator.jpg';
-            link.href = canvas.toDataURL('image/jpeg', 0.9);
+            link.download = 'undercwel_bln_generator.jpg';
+            link.href = copyableImage.src; // Pobierz gotowy obraz
             link.click();
         }
     </script>
