@@ -2,31 +2,33 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generator undercwel_bln</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Generator UNDERCWEL_BLN</title>
     <style>
-        /* Styl ogólny - ciemne tło */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             background-color: #1a1a1a;
             color: #ffffff;
             font-family: Arial, sans-serif;
             display: flex;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
             margin: 0;
+            overflow-x: hidden;
         }
 
-        /* Główny kontener */
         .container {
             background-color: #222222;
-            padding: 20px;
+            padding: 15px;
             border-radius: 5px;
             width: 100%;
             max-width: 500px;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
 
-        /* Etykiety tekstowe */
         label {
             display: block;
             font-size: 11px;
@@ -35,30 +37,29 @@
             text-transform: uppercase;
         }
 
-        /* Wspólne style dla pól i przycisków */
         .input-box, .btn {
             background-color: #1a1a1a;
             border: 1px solid #ff1a1a;
             color: #ffffff;
             width: 100%;
-            box-sizing: border-box;
             border-radius: 3px;
             margin-bottom: 15px;
+            font-size: 16px; /* Zapobiega auto-zoom na iOS */
         }
 
         .input-box {
-            padding: 10px;
-            font-size: 14px;
+            padding: 12px 10px;
         }
 
         textarea.input-box {
             height: 80px;
             resize: vertical;
             font-weight: bold;
+            font-family: 'Arial Black', Impact, sans-serif;
         }
 
         .btn {
-            padding: 12px;
+            padding: 14px;
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
@@ -69,7 +70,6 @@
             background-color: #333333;
         }
 
-        /* Aktywny czerwony przycisk ustawień */
         .btn.active-red {
             background-color: #ff1a1a;
             color: white;
@@ -78,7 +78,6 @@
             background-color: #e60000;
         }
 
-        /* Ukryty panel ustawień czcionki */
         #settingsPanel {
             display: none;
             background-color: #2a2a2a;
@@ -88,26 +87,26 @@
             border: 1px solid #333;
         }
 
-        /* Siatka dla rozmiarów 3 linii */
         .size-inputs-row {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
         .size-inputs-row .input-box {
             margin-bottom: 0;
             text-align: center;
+            flex: 1;
+            min-width: 60px;
         }
 
-        /* Pasek wyboru koloru */
         input[type="color"] {
             padding: 2px 5px;
-            height: 35px;
+            height: 45px;
             cursor: pointer;
         }
 
-        /* Kontener na podgląd wygenerowanego obrazka */
         .preview-container {
             position: relative;
             width: 100%;
@@ -127,20 +126,18 @@
             display: block;
         }
 
-        /* NOWE: Ukryty obraz dla kopiowania (niewidoczny dla oka, ale przeglądarka go widzi przy kopiowaniu) */
         #copyable-image {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Dopasowuje do wymiarów kontenera */
-            opacity: 0; /* Całkowicie przezroczysty dla oka */
-            pointer-events: auto; /* Reaguje na kliknięcia (prawy przycisk) */
-            z-index: 10; /* Zawsze na górze podglądu */
+            object-fit: contain;
+            opacity: 0;
+            pointer-events: auto;
+            z-index: 10;
         }
 
-        /* Czarny cień */
         .gradient-overlay {
             position: absolute;
             bottom: 0;
@@ -152,12 +149,11 @@
             flex-direction: column;
             justify-content: flex-end;
             align-items: center;
-            padding-bottom: 20px;
+            padding-bottom: 5%;
             pointer-events: none;
-            z-index: 5; /* Poniżej ukrytego obrazu dla kopiowania */
+            z-index: 5;
         }
 
-        /* Główny duży tekst */
         .main-text {
             font-family: 'Arial Black', Impact, sans-serif;
             font-weight: 900;
@@ -165,7 +161,8 @@
             text-align: center;
             margin-bottom: 5px;
             word-break: break-word;
-            padding: 0 20px;
+            padding: 0 4%;
+            width: 100%;
         }
         
         .main-text div {
@@ -173,10 +170,8 @@
             padding: 0;
         }
 
-        /* Znak wodny / dolny tekst */
         .watermark {
             font-family: 'Arial Black', Impact, sans-serif;
-            font-size: 16px;
             font-weight: 900;
             color: #9b51e0;
             text-transform: uppercase;
@@ -185,15 +180,23 @@
 
         input[type="file"] {
             color: white;
+            padding: 8px;
         }
         input[type="file"]::file-selector-button {
             background-color: #e0e0e0;
             border: none;
-            padding: 3px 8px;
+            padding: 8px 12px;
             font-weight: bold;
             margin-right: 10px;
             cursor: pointer;
             color: black;
+            border-radius: 2px;
+        }
+
+        @media (min-width: 550px) {
+            .container {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -206,10 +209,8 @@
         <label>Tekst:</label>
         <textarea id="textInput" class="input-box" placeholder="Wpisz tekst tutaj..."></textarea>
 
-        <!-- Przycisk toggle dla ustawień -->
         <button class="btn" id="toggleSettingsBtn">Ustawienia czcionki</button>
 
-        <!-- Rozwijany panel ustawień -->
         <div id="settingsPanel">
             <label>Rozmiar czcionki dla linii (opcjonalne):</label>
             <div class="size-inputs-row">
@@ -226,14 +227,11 @@
 
         <div class="preview-container" id="captureArea">
             <img id="preview-image" src="https://via.placeholder.com/500x500/333333/555555?text=Brak+obrazu" alt="Podgląd">
-            
-            <!-- NOWE: To jest ten scalony obraz, który kopiujesz (nie widać go, ale jest nad podglądem) -->
-            <img id="copyable-image" alt="Kliknij prawym przyciskiem, aby skopiować" title="Kliknij prawym przyciskiem, aby skopiować">
+            <img id="copyable-image" alt="Kliknij prawym przyciskiem, aby skopiować" title="Kliknij lub przytrzymaj, aby zapisać">
             
             <div class="gradient-overlay">
-                <!-- Podgląd tekstu -->
                 <div class="main-text" id="previewText"></div>
-                <div class="watermark">undercwel_bln</div>
+                <div class="watermark" id="previewWatermark">UNDERCWEL_BLN</div>
             </div>
         </div>
 
@@ -245,8 +243,9 @@
         const textInput = document.getElementById('textInput');
         const previewImage = document.getElementById('preview-image');
         const previewText = document.getElementById('previewText');
+        const previewWatermark = document.getElementById('previewWatermark');
+        const captureArea = document.getElementById('captureArea');
         
-        // Elementy panelu ustawień
         const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
         const settingsPanel = document.getElementById('settingsPanel');
         const fs1 = document.getElementById('fs1');
@@ -255,10 +254,8 @@
         const fontColor = document.getElementById('fontColor');
         const resetBtn = document.getElementById('resetBtn');
 
-        // NOWE: Element dla scalonego obrazu
         const copyableImage = document.getElementById('copyable-image');
 
-        // Obsługa rozwijania panelu ustawień
         toggleSettingsBtn.addEventListener('click', () => {
             if (settingsPanel.style.display === 'block') {
                 settingsPanel.style.display = 'none';
@@ -269,7 +266,6 @@
             }
         });
 
-        // Resetowanie ustawień panelu
         resetBtn.addEventListener('click', () => {
             fs1.value = '';
             fs2.value = '';
@@ -278,7 +274,6 @@
             updatePreview();
         });
 
-        // Funkcja pomocnicza: Zawijanie pojedynczej linijki (akapitu)
         function wrapText(ctx, text, maxWidth) {
             let words = text.split(' ');
             let lines = [];
@@ -298,7 +293,6 @@
             return lines;
         }
 
-        // Funkcja aktualizująca tekst i style na żywo w podglądzie HTML
         function updatePreview() {
             const text = textInput.value;
             const paragraphs = text.split('\n');
@@ -306,6 +300,9 @@
             
             previewText.style.color = fontColor.value;
             previewText.innerHTML = '';
+            
+            const containerWidth = captureArea.clientWidth;
+            const displayScale = containerWidth > 0 ? (containerWidth / 500) : 1;
             
             paragraphs.forEach((p, index) => {
                 let div = document.createElement('div');
@@ -316,19 +313,22 @@
                     size = parseInt(customSizes[index]);
                 }
                 
-                div.style.fontSize = size + 'px';
+                let scaledSize = Math.max(10, size * displayScale); 
+                
+                div.style.fontSize = scaledSize + 'px';
                 div.style.lineHeight = '1.1';
                 previewText.appendChild(div);
             });
 
-            // NOWE: Po aktualizacji podglądu, generujemy scalony obraz dla kopiowania
+            let watermarkSize = Math.max(8, 16 * displayScale);
+            previewWatermark.style.fontSize = watermarkSize + 'px';
+
             generateFinalImage();
         }
 
-        // NOWE: Funkcja generująca scalony obraz na podstawie aktualnych danych i ustawiająca go jako źródło ukrytego obrazu
         function generateFinalImage() {
             if (previewImage.src.includes('placeholder')) {
-                copyableImage.src = ''; // Wyczyść jeśli nie ma zdjęcia
+                copyableImage.src = ''; 
                 return;
             }
 
@@ -338,7 +338,7 @@
             canvas.width = previewImage.naturalWidth;
             canvas.height = previewImage.naturalHeight;
 
-            // 1. Zdjęcie tła
+            // 1. Tło
             ctx.drawImage(previewImage, 0, 0, canvas.width, canvas.height);
 
             // 2. Gradient
@@ -351,7 +351,7 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, gradientY, canvas.width, gradientHeight);
 
-            // 3. Teksty
+            // 3. Teksty na Canvas (użycie czcionki Arial Black)
             const scaleFactor = canvas.width / 500; 
             const rawParagraphs = textInput.value.split('\n');
             const customSizes = [fs1.value, fs2.value, fs3.value];
@@ -367,7 +367,7 @@
                 if (i < 3 && customSizes[i]) baseSize = parseInt(customSizes[i]);
                 let scaledSize = Math.floor(baseSize * scaleFactor);
                 ctx.font = `900 ${scaledSize}px 'Arial Black', Impact, sans-serif`;
-                let wrapped = wrapText(ctx, rawParagraphs[i], canvas.width * 0.9);
+                let wrapped = wrapText(ctx, rawParagraphs[i], canvas.width * 0.92);
                 
                 for (let j = 0; j < wrapped.length; j++) {
                     let lineHeight = scaledSize * 1.1;
@@ -391,46 +391,43 @@
             const watermarkFontSize = Math.floor(16 * scaleFactor);
             ctx.font = `900 ${watermarkFontSize}px 'Arial Black', Impact, sans-serif`;
             ctx.fillStyle = '#9b51e0';
-            ctx.fillText("undercwel_bln", canvas.width / 2, canvas.height - (15 * scaleFactor));
+            ctx.fillText("UNDERCWEL_BLN", canvas.width / 2, canvas.height - (15 * scaleFactor));
 
-            // Zapisz wygenerowany obraz do tagu img dla kopiowania
             copyableImage.src = canvas.toDataURL('image/jpeg', 0.9);
         }
 
-        // Nasłuchiwanie zmian, żeby podgląd i obraz dla kopiowania aktualizowały się na żywo
+        window.addEventListener('resize', updatePreview);
+        
         textInput.addEventListener('input', updatePreview);
         fs1.addEventListener('input', updatePreview);
         fs2.addEventListener('input', updatePreview);
         fs3.addEventListener('input', updatePreview);
         fontColor.addEventListener('input', updatePreview);
 
-        // Wstępne wywołanie żeby ustawić pierwszy tekst
         updatePreview();
 
-        // Wgrywanie obrazka
         imageInput.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     previewImage.src = e.target.result;
-                    // Po wgraniu zdjęcia musimy wygenerować scalony obraz
-                    generateFinalImage();
+                    setTimeout(() => {
+                        updatePreview();
+                    }, 50);
                 }
                 reader.readAsDataURL(file);
             }
         });
 
-        // Przycisk pobierania korzysta z tej samej logiki co kopiowanie
         function downloadImage() {
             if (copyableImage.src === '') {
                 alert("Najpierw wybierz obraz i wpisz tekst!");
                 return;
             }
-
             const link = document.createElement('a');
-            link.download = 'undercwel_bln_generator.jpg';
-            link.href = copyableImage.src; // Pobierz gotowy obraz
+            link.download = 'UNDERCWEL_BLN_generator.jpg';
+            link.href = copyableImage.src; 
             link.click();
         }
     </script>
